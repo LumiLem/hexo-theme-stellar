@@ -23,8 +23,10 @@
       display: block
       object-fit: cover
       border-radius: $border-image
+      z-index: 1 // 可选，确保图片在按钮下
     .image-download
       position: absolute
+      z-index: 2 // 新增
       bottom: 8px
       right: 8px
       font-size: 1.125rem

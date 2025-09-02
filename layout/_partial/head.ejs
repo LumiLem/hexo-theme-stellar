@@ -1,5 +1,18 @@
 <%
 function generate_title() {
+    if (is_home()) {
+    // 网站副标题从配置文件中获取
+    const site_subtitle = config.subtitle || theme.subtitle || '';
+    
+    // 如果副标题存在且非空
+    if (site_subtitle && site_subtitle.trim() !== '') {
+      return config.title + ' - ' + site_subtitle;
+    } else {
+      // 如果没有副标题，只显示主标题
+      return config.title;
+    }
+  }
+  
   if (page.wiki) {
     const proj = theme.wiki.tree[page.wiki]
     const wiki = proj?.name || page.wiki

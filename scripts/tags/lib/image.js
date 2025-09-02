@@ -77,12 +77,9 @@ module.exports = ctx => function(args) {
     }
     if (args.ratio) {
       el += 'aspect-ratio:' + args.ratio + ';'
-      if (style) {
-        el += style
-      }
-    } else if (style) {
-      // 如果设置了图片宽度，但没有长宽比，那背景区就要铺满宽度
-      el += 'width:100%;'
+    }
+    if (style) {
+      el += style
     }
     el += '"'
   }
