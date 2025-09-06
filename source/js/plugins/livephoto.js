@@ -1,26 +1,44 @@
-// source/js/plugins/livephoto.js
-
+// // source/js/plugins/livephoto.js
 // 将初始化函数暴露给全局对象
 window.initLivePhotos = function() {
-  document.querySelectorAll('.live-photo').forEach(livePhoto => {
-    const container = livePhoto.querySelector('.container');
-    const icon = livePhoto.querySelector('.icon');
+  document.querySelectorAll('.live-photo-container').forEach(container => {
     const video = container.querySelector('video');
-    const image = container.querySelector('img');
-    const warning = livePhoto.querySelector('.warning');
+    const img = container.querySelector('img');
+    const icon = container.querySelector('.icon');
+    const warning = container.querySelector('.warning');
     
-    // 保存原始视频URL
-    const originalVideoUrl = video.src;
+    const handleError = (errorMessage) => {
+      if (warning) {
+        warning.textContent = errorMessage;
+        warning.style.opacity = 1;
+        warning.style.display = 'inline-block';
+        
+        setTimeout(() => {
+          warning.style.opacity = 0;
+        }, 5000);
+      }
+    };
     
-    // 仅添加视频转换逻辑
-    fetch(originalVideoUrl)
-      .then(response => {
+    img.onerror = function() {
+      this.src = ctx.theme.config.default.image_onerror;
+      
+      handleError('图片加载失败');
+    };
+    
+    // 加载视频函数 - 使用Blob URL
+    const loadVideo = async () => {
+      try {
+        // 获取原始视频URL
+        const originalVideoUrl = video.dataset.src;
+        
+        // 添加视频转换逻辑（防止浏览器劫持）
+        const response = await fetch(originalVideoUrl);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.blob();
-      })
-      .then(blob => {
+        
+        const blob = await response.blob();
+        
         // 创建Blob URL
         const blobUrl = URL.createObjectURL(blob);
         
@@ -28,21 +46,33 @@ window.initLivePhotos = function() {
         video.src = blobUrl;
         
         // 添加Blob URL释放机制
-        // 1. 监听视频结束事件释放Blob URL
-        video.addEventListener('ended', () => {
+        const releaseBlobUrl = () => {
           URL.revokeObjectURL(blobUrl);
-        });
+        };
+        
+        // 1. 监听视频结束事件释放Blob URL
+        video.addEventListener('ended', releaseBlobUrl);
         
         // 2. 页面卸载时释放Blob URL
-        window.addEventListener('beforeunload', () => {
-          URL.revokeObjectURL(blobUrl);
+        window.addEventListener('beforeunload', releaseBlobUrl);
+        
+        // 3. 容器移除时释放Blob URL
+        const observer = new MutationObserver(() => {
+          if (!document.body.contains(container)) {
+            releaseBlobUrl();
+            observer.disconnect();
+          }
         });
-      })
-      .catch(error => {
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        return true;
+      } catch (error) {
         console.error('视频转换失败:', error);
-      });
+        handleError('视频加载失败');
+        return false;
+      }
+    };
     
-    // 保持原有的事件监听代码不变
     let within = false;
 
     const start = async (e) => {
@@ -52,44 +82,74 @@ window.initLivePhotos = function() {
       within = true;
 
       try {
+        // 确保视频已加载
+        if (!video.src || !video.src.startsWith('blob:')) {
+          const loaded = await loadVideo();
+          if (!loaded) return;
+          
+          // 等待视频加载完成
+          await new Promise((resolve, reject) => {
+            video.addEventListener('loadeddata', resolve);
+            video.addEventListener('error', reject);
+          });
+        }
+        
         video.currentTime = 0;
         await video.play();
-        livePhoto.classList.add('zoom');
+        container.classList.add('zoom');
       }
       catch(e) {
-        console.log(e);
         if (within && e instanceof DOMException) {
+          let errorMessage = '播放错误';
           if (['NotAllowedError','AbortError'].includes(e.name)) {
-            warning.innerText = '浏览器未允许视频自动播放权限，无法播放实况照片。';
+            errorMessage = '浏览器未允许视频自动播放权限';
           } else if (['NotSupportedError'].includes(e.name)) {
-            warning.innerText = '视频未加载完成或浏览器不支持播放此视频格式。';
+            errorMessage = '浏览器不支持此视频格式';
           } else {
-            warning.innerText = `其它错误：${e}`;
+            errorMessage = `播放错误: ${e.message}`;
           }
-          warning.classList.add('show');
+          handleError(errorMessage);
         }
       }
     };
 
     const leave = (e) => {
-      livePhoto.classList.remove('zoom');
-      warning.classList.remove('show');
-
+      container.classList.remove('zoom');
       within = false;
-
       video.pause();
+      video.currentTime = 0;
+      
+      // 隐藏警告
+      if (warning) {
+        warning.style.opacity = 0;
+      }
     };
 
-    icon.addEventListener('mouseenter',   start);
-    icon.addEventListener('mouseleave',   leave);
+    // 事件监听
+    // PC端：只在图标上监听鼠标事件
+    if (icon) {
+      icon.addEventListener('mouseenter', start);
+      icon.addEventListener('mouseleave', leave);
+    }
+    
+    // 移动端：在图片上监听触摸事件
+    if (img) {
+      img.addEventListener('touchstart', start);
+      img.addEventListener('touchend', leave);
+      img.addEventListener('touchcancel', leave);
+    }
+    
+    // 保留图标点击事件（PC和移动端通用）
+    if (icon) {
+      icon.addEventListener('click', start);
+    }
 
-    image.addEventListener('touchstart',  start);
-    image.addEventListener('touchend',    leave);
-    image.addEventListener('touchcancel', leave);
-
+    // 视频播放结束事件
     video.addEventListener('ended', () => {
-      livePhoto.classList.remove('zoom');
+      container.classList.remove('zoom');
     });
+
+    
   });
 };
 
