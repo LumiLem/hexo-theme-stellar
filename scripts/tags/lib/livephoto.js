@@ -69,6 +69,13 @@ module.exports = ctx => function(args) {
   
   el += '<div class="icon">';
   el += '<img src="' + LIVE_ICON + '" class="no-zoom static">';
+   // 添加加载状态元素（默认隐藏）
+  el += '<div class="loading-spinner" style="display: none;">';
+  el += '<svg viewBox="0 0 24 24" width="20" height="20">';
+  el += '<circle cx="12" cy="12" r="10" stroke="rgba(0,0,0,0.2)" stroke-width="2" fill="none"/>';
+  el += '<circle cx="12" cy="12" r="10" stroke="#606060" stroke-width="2" stroke-dasharray="15, 100" fill="none" stroke-linecap="round"/>';
+  el += '</svg>';
+  el += '</div>';
   el += '<span>实况</span>';
   el += '</div>';
   

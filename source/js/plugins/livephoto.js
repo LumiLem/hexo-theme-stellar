@@ -1,4 +1,3 @@
-// // source/js/plugins/livephoto.js
 // 将初始化函数暴露给全局对象
 window.initLivePhotos = function() {
   document.querySelectorAll('.live-photo-container').forEach(container => {
@@ -6,7 +5,11 @@ window.initLivePhotos = function() {
     const img = container.querySelector('img');
     const icon = container.querySelector('.icon');
     const warning = container.querySelector('.warning');
+    const spinner = icon ? icon.querySelector('.loading-spinner') : null;
+    const iconImg = icon ? icon.querySelector('img') : null;
+    const iconText = icon ? icon.querySelector('span') : null;
     
+    // 错误处理函数
     const handleError = (errorMessage) => {
       if (warning) {
         warning.textContent = errorMessage;
@@ -21,7 +24,6 @@ window.initLivePhotos = function() {
     
     img.onerror = function() {
       this.src = ctx.theme.config.default.image_onerror;
-      
       handleError('图片加载失败');
     };
     
@@ -80,10 +82,20 @@ window.initLivePhotos = function() {
       e.preventDefault();
 
       within = true;
+      
+      // 检查视频是否已经加载
+      const videoLoaded = video.src && video.src.startsWith('blob:');
+      
+      // 只有在视频未加载时才显示加载状态
+      if (!videoLoaded && iconImg && spinner && iconText) {
+        iconImg.style.display = 'none';
+        spinner.style.display = 'block';
+        iconText.textContent = '加载中';
+      }
 
       try {
         // 确保视频已加载
-        if (!video.src || !video.src.startsWith('blob:')) {
+        if (!videoLoaded) {
           const loaded = await loadVideo();
           if (!loaded) return;
           
@@ -109,6 +121,14 @@ window.initLivePhotos = function() {
             errorMessage = `播放错误: ${e.message}`;
           }
           handleError(errorMessage);
+        }
+      }
+      finally {
+        // 只有在视频未加载时才恢复图标状态
+        if (!videoLoaded && iconImg && spinner && iconText) {
+          iconImg.style.display = 'block';
+          spinner.style.display = 'none';
+          iconText.textContent = '实况';
         }
       }
     };
@@ -148,8 +168,6 @@ window.initLivePhotos = function() {
     video.addEventListener('ended', () => {
       container.classList.remove('zoom');
     });
-
-    
   });
 };
 
