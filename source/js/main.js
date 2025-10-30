@@ -230,7 +230,7 @@ const init = {
     }
     if (!canonical.originalHost) return;
     const currentURL = new URL(window.location.href);
-    const currentHost = currentURL.hostname.replace(/^www\./, '');
+    const currentHost = currentURL.hostname;
     if (currentHost == 'localhost') return;
     const encodedCurrentHost = window.btoa(currentHost);
     const isCurrentHostValid = canonical.encoded === encodedCurrentHost;
@@ -247,7 +247,7 @@ const init = {
       return;
     }
     const canonicalURL = new URL(canonicalTag.href);
-    const canonicalHost = canonicalURL.hostname.replace(/^www\./, '');
+    const canonicalHost = canonicalURL.hostname;
     const encodedCanonicalHost = window.btoa(canonicalHost);
     const isCanonicalHostValid = canonical.encoded === encodedCanonicalHost;
     if (isCanonicalHostValid && isCurrentHostValid) {
