@@ -34,7 +34,6 @@ hexo.extend.tag.register('icon', require('./lib/icon')(hexo))
 hexo.extend.tag.register('frame', require('./lib/frame')(hexo))
 hexo.extend.tag.register('image', require('./lib/image')(hexo))
 
-hexo.extend.tag.register('livephoto', require('./lib/livephoto')(hexo))
 
 hexo.extend.tag.register('link', require('./lib/link')(hexo))
 hexo.extend.tag.register('button', require('./lib/button')(hexo))

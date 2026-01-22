@@ -31,18 +31,7 @@
             downloadFileEvent(ctx.files);
           });
         }
-      } else if (id == 'livephoto') {
-      // 新增实况照片服务
-      const livePhotos = document.querySelectorAll('.live-photo');
-      if (livePhotos.length > 0) {
-        utils.js(js, { defer: true }).then(function () {
-          // 调用实况照片初始化函数
-          if (window.initLivePhotos) {
-            window.initLivePhotos();
-          }
-        });
-      }
-    } else {
+} else {
         const els = document.getElementsByClassName(`ds-${id}`);
         if (els?.length > 0) {
           utils.jq(() => {
