@@ -1,6 +1,9 @@
 @import 'lazyload'
 @import 'aplayer'
 
+// 实况照片基础样式（独立加载，不依赖其他插件）
+@import 'livephoto'
+
 // 根据主题配置加载
 if hexo-config('plugins.swiper.enable')
   @import 'swiper'
@@ -8,6 +11,7 @@ if hexo-config('plugins.scrollreveal.enable')
   @import 'scrollreveal'
 if hexo-config('plugins.fancybox.enable')
   @import 'fancybox'
+  @import 'fancybox-livephoto'  // 实况照片Fancybox增强样式
 if hexo-config('plugins.mermaid.style_optimization')
   @import 'mermaid'
 if hexo-config('plugins.copycode.enable')

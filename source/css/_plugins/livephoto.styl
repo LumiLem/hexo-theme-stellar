@@ -1,0 +1,150 @@
+/**
+ * Stellar 主题实况照片样式
+ * 基于 Ech0 项目的实况照片功能实现
+ */
+
+/* 1. 实况照片容器基础样式 */
+.livephoto-container
+  position: relative
+  display: inline-grid
+  grid-template-areas: "media-stack"
+  width: 100%
+  height: auto
+  overflow: hidden
+  border-radius: 8px
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+  // cursor 由 fancybox.styl 统一管理
+
+/* 2. 图片与视频布局 */
+.livephoto-container .livephoto-image,
+.livephoto-container .livephoto-video
+  grid-area: media-stack
+  display: block
+  width: 100%
+  height: auto
+  object-fit: contain
+  border-radius: 8px
+  user-select: none
+  -webkit-user-select: none
+
+.livephoto-container .livephoto-image
+  position: relative
+  z-index: 1
+  transition: opacity 0.5s ease
+  pointer-events: none
+
+.livephoto-container .livephoto-video
+  opacity: 0
+  transition: opacity 0.5s ease
+  z-index: 2
+  pointer-events: none
+  // 确保视频与图片尺寸一致
+  object-fit: cover  // 当容器有固定尺寸时使用cover模式
+
+/* 隐藏视频原生控件 */
+.livephoto-container .livephoto-video::-webkit-media-controls,
+.livephoto-container .livephoto-video::-webkit-media-controls-enclosure,
+.livephoto-container .livephoto-video::-webkit-media-controls-panel,
+.livephoto-container .livephoto-video::-webkit-media-controls-picture-in-picture-button
+  display: none !important
+
+/* 3. 播放状态样式 */
+.livephoto-container.playing
+  transform: scale(1.02)
+
+.livephoto-container.playing .livephoto-video
+  opacity: 1
+
+.livephoto-container.playing .livephoto-image
+  opacity: 0
+
+.livephoto-container.playing .livephoto-icon
+  animation: livephoto-spin 3s linear infinite
+
+@keyframes livephoto-spin
+  from
+    transform: rotate(0deg)
+  to
+    transform: rotate(360deg)
+
+/* 4. 实况照片指示器 */
+.livephoto-overlay
+  position: absolute
+  top: 8px
+  left: 8px
+  display: flex
+  align-items: center
+  gap: 4px
+  padding: 4px 8px
+  background: rgba(0, 0, 0, 0.5)
+  border-radius: 12px
+  backdrop-filter: blur(4px)
+  -webkit-backdrop-filter: blur(4px)
+  pointer-events: auto  // 允许交互
+  z-index: 10
+  transition: all 0.3s ease
+  cursor: pointer  // LIVE图标区域显示手型光标，表示可以播放
+
+.livephoto-overlay:hover
+  background: rgba(0, 0, 0, 0.7)
+  transform: scale(1.05)  // 悬停时轻微放大
+
+.livephoto-icon
+  width: 16px
+  height: 16px
+  color: #fff
+  flex-shrink: 0
+  pointer-events: none  // 图标本身不响应点击
+
+.livephoto-text
+  font-size: 10px
+  font-weight: 600
+  color: #fff
+  letter-spacing: 0.5px
+  white-space: nowrap
+  pointer-events: none  // 文字本身不响应点击
+
+/* 5. 悬停效果 */
+.livephoto-container:hover
+  transform: translateY(-2px)
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 8px rgba(0, 0, 0, 0.04), 0 8px 16px rgba(0, 0, 0, 0.04), 0 16px 32px rgba(0, 0, 0, 0.04)
+
+/* 图片区域继承容器的光标样式 */
+.livephoto-container .livephoto-image
+  // cursor 继承自容器，由 fancybox.styl 统一管理
+
+/* 6. 移动端适配 */
+@media screen and (max-width: $device-mobile-max)
+  .livephoto-overlay
+    padding: 2px 6px
+    top: 4px
+    left: 4px
+  
+  .livephoto-icon
+    width: 12px
+    height: 12px
+  
+  .livephoto-text
+    font-size: 8px
+
+/* 7. 主题适配 */
+.tag-plugin.image.has-livephoto
+  position: relative
+
+.tag-plugin.image.has-livephoto .image-bg
+  position: relative
+  overflow: hidden
+
+/* 8. 禁用长按菜单和选择 */
+.livephoto-container,
+.livephoto-container *
+  -webkit-touch-callout: none
+  -webkit-user-select: none
+  user-select: none
+
+/* 9. 确保图片容器样式兼容 */
+.tag-plugin.image .livephoto-container img
+  margin: 0
+  padding: 0
+  border: none
+  box-shadow: none

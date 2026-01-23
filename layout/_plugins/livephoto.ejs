@@ -1,0 +1,7 @@
+<script>
+  // 检查页面是否有实况照片
+  const livePhotos = document.querySelectorAll('.livephoto-container');
+  if (livePhotos.length > 0) {
+    utils.js('/js/plugins/livephoto.js', { defer: true });
+  }
+</script>

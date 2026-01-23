@@ -409,6 +409,15 @@ tag_plugins:
   # {% image %}
   image:
     fancybox: false # true, false
+    # 实况照片功能说明：
+    # 使用 livephoto 参数可以创建实况照片效果
+    # 语法：{% image 图片URL 描述 fancybox:true livephoto:视频URL %}
+    # 
+    # 功能特性：
+    # 1. 基础功能：文章内悬停播放（无需fancybox）
+    # 2. 增强功能：配合fancybox:true可在弹窗中完整体验
+    # 3. 独立性：即使不启用fancybox也能使用基础实况照片功能
+    # 4. 兼容性：与普通图片完全兼容，支持混合使用
   # {% copy xxx %}
   copy:
     toast: 复制成功
@@ -540,8 +549,8 @@ plugins:
   # available for {% image xxx %}
   fancybox:
     enable: true
-    js: https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js
-    css: https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css
+    js: https://gcore.jsdelivr.net/npm/@fancyapps/ui@6.1.7/dist/fancybox/fancybox.umd.js
+    css: https://gcore.jsdelivr.net/npm/@fancyapps/ui@6.1.7/dist/fancybox/fancybox.css
     # 让 md 语法图片支持放大可以这样写: .md-text img:not([class]), .md-text .image img
     # 可以处理评论区的图片（不支持 iframe 类评论系统）例如：
     # 使用 twikoo 评论可以写: .tk-content img:not([class*="emo"])

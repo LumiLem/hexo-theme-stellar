@@ -2,13 +2,13 @@
  * image.js v1 | https://github.com/xaoxuu/hexo-theme-stellar/
  * 格式与官方标签插件一致使用空格分隔，中括号内的是可选参数（中括号不需要写出来）
  *
- * {% image src [alt] [width:400px] [bg:#eee] [download:true/false/url] [fancybox:true/false/url] [ratio] %}
+ * {% image src [alt] [width:400px] [bg:#eee] [download:true/false/url] [fancybox:true/false/url] [ratio] [livephoto:video_url] %}
  */
 
 'use strict'
 
 module.exports = ctx => function(args) {
-  args = ctx.args.map(args, ['width', 'height', 'bg', 'download', 'padding', 'fancybox', 'ratio'], ['src', 'alt'])
+  args = ctx.args.map(args, ['width', 'height', 'bg', 'download', 'padding', 'fancybox', 'ratio', 'livephoto'], ['src', 'alt'])
   var style = ''
   if (args.width) {
     style += 'width:' + args.width + ';'
@@ -40,19 +40,62 @@ module.exports = ctx => function(args) {
   function img(src, alt, style) {
     let a = '<a data-fancybox'
     let img = ''
-    img += `<img class="lazy" src="${src}" data-src="${src}"`
-    if (alt) {
-      img += ` alt="${alt}"`
-      a += ` data-caption="${alt}"`
+    
+    // 检查是否为实况照片
+    const isLivePhoto = args.livephoto && args.livephoto.length > 0
+    
+    if (isLivePhoto) {
+      // 实况照片结构
+      img += `<div class="livephoto-container" data-livephoto-image="${src}" data-livephoto-video="${args.livephoto}"`
+      if (fancybox && !fancyboxHref) {
+        img += ` data-fancybox="${fancybox}"`
+      }
+      if (alt) {
+        img += ` data-caption="${alt}"`
+        a += ` data-caption="${alt}"`
+      }
+      img += `>`
+      img += `<img class="lazy livephoto-image" src="${src}" data-src="${src}"`
+      if (alt) {
+        img += ` alt="${alt}"`
+      }
+      if (style.length > 0 && !args.ratio) {
+        img += ' style="' + style + '"'
+      }
+      img += `onerror="this.src=&quot;${ctx.theme.config.default.image_onerror}&quot;"`
+      img += '/>'
+      
+      // 添加视频元素（隐藏）
+      img += `<video class="livephoto-video" src="${args.livephoto}" preload="metadata" muted playsinline disablepictureinpicture></video>`
+      
+      // 添加实况照片指示器
+      img += `<div class="livephoto-overlay" title="悬停播放实况照片">`
+      img += `<svg class="livephoto-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">`
+      img += `<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/>`
+      img += `<circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>`
+      img += `<circle cx="12" cy="12" r="3" fill="currentColor"/>`
+      img += `</svg>`
+      img += `<span class="livephoto-text">LIVE</span>`
+      img += `</div>`
+      
+      img += `</div>`
+    } else {
+      // 普通图片结构
+      img += `<img class="lazy" src="${src}" data-src="${src}"`
+      if (alt) {
+        img += ` alt="${alt}"`
+        a += ` data-caption="${alt}"`
+      }
+      if (fancybox && !fancyboxHref) {
+        img += ` data-fancybox="${fancybox}"`
+      }
+      if (style.length > 0 && !args.ratio) {
+        img += ' style="' + style + '"'
+      }
+      img += `onerror="this.src=&quot;${ctx.theme.config.default.image_onerror}&quot;"`
+      img += '/>'
     }
-    if (fancybox && !fancyboxHref) {
-      img += ` data-fancybox="${fancybox}"`
-    }
-    if (style.length > 0 && !args.ratio) {
-      img += ' style="' + style + '"'
-    }
-    img += `onerror="this.src=&quot;${ctx.theme.config.default.image_onerror}&quot;"`
-    img += '/>'
+    
     // loading
     img += `<div class="lazy-icon" style="background-image:url(${ctx.theme.config.default.loading});"></div>`
     if (fancyboxHref) {
@@ -64,7 +107,12 @@ module.exports = ctx => function(args) {
 
   var el = ''
   // wrap
-  el += '<div class="tag-plugin image">'
+  el += '<div class="tag-plugin image'
+  // 添加实况照片类名
+  if (args.livephoto && args.livephoto.length > 0) {
+    el += ' has-livephoto'
+  }
+  el += '">'
   // bg
   el += `<div class="image-bg"`
   if (args.bg || args.padding || args.ratio || style) {

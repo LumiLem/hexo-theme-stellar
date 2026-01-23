@@ -7,6 +7,9 @@ function loadPlugins() {
     el += partial(`search/${theme.search.service}`, {conf: theme.search[theme.search.service]});
   }
   
+  // livephoto (auto-load when needed)
+  el += partial('livephoto');
+  
   // others
   for (let id of Object.keys(theme.plugins)) {
     const conf = Object.assign({}, theme.plugins[id], page[id])
