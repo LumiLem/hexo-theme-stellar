@@ -1,0 +1,193 @@
+.tag-plugin.timeline.ds-ech0
+  padding-left: 0
+  &:before
+    display: none
+  
+  .timenode 
+    padding-left: 16px
+    &:before
+      content: ''
+      position: absolute
+      z-index: 0
+      background: var(--block)
+      width: 4px
+      left: 0px
+      border-radius: 8px
+      top: 0.5rem
+      bottom: 0
+    &+.timenode
+      margin-top: 2rem
+    
+    .body
+      padding: 0
+      background: var(--card)
+      border-radius: 12px
+      box-shadow: $boxshadow-card
+      overflow: hidden
+      border: 1px solid var(--block-border)
+      
+      .content
+        padding: 0.75rem 1rem
+        font-size: $fs-15
+        line-height: 1.6
+        p 
+          margin: 0
+          &:not(:last-child)
+            margin-bottom: 0.5rem
+
+      .gallery
+        padding: 0 1rem 0.5rem
+      
+      .footer
+        padding: 0.5rem 1rem
+        border-top: 1px solid var(--block-border)
+        background: var(--block)
+        .flex
+          gap: 8px
+        .item
+          border-radius: 6px
+          font-size: $fs-12
+          padding: 2px 8px
+          background: var(--card)
+          border: 1px solid var(--block-border)
+          trans1 all
+          &.like
+            cursor: pointer
+            &:hover
+              background: var(--block-hover)
+            &.active
+              color: var(--accent)
+              border-color: var(--accent)
+              background: rgba(128, 128, 128, 0.05)
+          &.origin
+            color: var(--text-p3)
+            &:hover
+              color: var(--accent)
+              border-color: var(--accent)
+
+  .gallery
+    display: grid
+    gap: 6px
+    
+    &.layout-grid
+      grid-template-columns: repeat(3, 1fr)
+      &[data-count="1"]
+        grid-template-columns: 1fr
+      &[data-count="2"]
+        grid-template-columns: repeat(2, 1fr)
+      &[data-count="4"]
+        grid-template-columns: repeat(2, 1fr)
+    
+    &.layout-waterfall
+      display: block
+      column-count: 2
+      column-gap: 6px
+      .image-container, .video-container, .livephoto-container, .livephoto-item
+        display: inline-block
+        width: 100%
+        margin-bottom: 6px
+
+    &.layout-horizontal
+      display: flex
+      overflow-x: auto
+      gap: 8px
+      padding-bottom: 8px
+      scrollbar-width: none
+      &::-webkit-scrollbar
+        display: none
+      .image-container, .video-container, .livephoto-container, .livephoto-item
+        flex-shrink: 0
+        width: 180px
+        height: 135px
+        img, video
+          height: 100%
+          object-fit: cover
+
+    &.layout-carousel
+      display: flex
+      overflow-x: auto
+      scroll-snap-type: x mandatory
+      scrollbar-width: none
+      &::-webkit-scrollbar
+        display: none
+      .image-container, .video-container, .livephoto-container, .livephoto-item
+        flex-shrink: 0
+        width: 100%
+        scroll-snap-align: start
+        img, video
+          aspect-ratio: 16/9
+          object-fit: contain
+          background: #000
+
+    img, video
+      width: 100%
+      border-radius: 8px
+      display: block
+      background: var(--block)
+    
+    .video-container 
+      position: relative
+      .play-overlay
+        position: absolute
+        top: 50%
+        left: 50%
+        transform: translate(-50%, -50%)
+        background: rgba(0,0,0,0.5)
+        border-radius: 50%
+        padding: 8px
+        display: flex
+        pointer-events: none
+        backdrop-filter: blur(4px)
+        border: 1px solid rgba(255,255,255,0.2)
+        svg 
+          width: 24px
+          height: 24px
+
+    .livephoto-container
+      position: relative
+      .livephoto-overlay
+        position: absolute
+        top: 8px
+        left: 8px
+        font-size: 10px
+        font-weight: bold
+        color: white
+        background: rgba(0,0,0,0.4)
+        padding: 2px 6px
+        border-radius: 4px
+        pointer-events: none
+        border: 0.5px solid rgba(255,255,255,0.3)
+        backdrop-filter: blur(2px)
+      .livephoto-video
+        position: absolute
+        top: 0
+        left: 0
+        opacity: 0
+        transition: opacity 0.3s
+      &.playing .livephoto-video
+        opacity: 1
+
+  .tag-plugin.audio-player
+    padding: 0.5rem 1rem
+  
+  .tag-plugin.link
+    margin: 0.5rem 1rem
+
+  .load-more
+    padding: 0.6rem 2rem
+    border-radius: 20px
+    font-size: $fs-13
+    font-weight: 500
+    margin: 2rem auto
+    width: fit-content
+    background: var(--card)
+    border: 1px solid var(--block-border)
+    color: var(--text-p2)
+    box-shadow: $boxshadow-card
+    trans1 all
+    &:hover
+      background: var(--accent)
+      color: white
+      border-color: var(--accent)
+      transform: translateY(-2px)
+      box-shadow: $boxshadow-card-float

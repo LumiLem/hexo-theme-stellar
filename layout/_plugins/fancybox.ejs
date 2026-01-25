@@ -23,32 +23,36 @@
     if (livePhotos != undefined && livePhotos.length > 0) {
       needFancybox = true;
     }
+    const ech0 = document.getElementsByClassName('ds-ech0');
+    if (ech0 != undefined && ech0.length > 0) {
+      needFancybox = true;
+    }
   }
   if (needFancybox) {
     utils.css(ctx.fancybox.css);
     utils.js(ctx.fancybox.js, { defer: true }).then(function () {
-      
+
       // 实况照片自动播放设置
       let livePhotoAutoPlay = localStorage.getItem('livePhotoAutoPlay') !== 'false';
-      
+
       // 切换自动播放设置
       function toggleLivePhotoAutoPlay() {
         livePhotoAutoPlay = !livePhotoAutoPlay;
         localStorage.setItem('livePhotoAutoPlay', String(livePhotoAutoPlay));
         return livePhotoAutoPlay;
       }
-      
+
       // 创建实况照片 HTML 内容
       function createLivePhotoHTML(imageUrl, videoUrl) {
         const autoPlayEnabled = livePhotoAutoPlay;
         return `<div class="fancybox-livephoto-container"><div class="livephoto-content"><video class="livephoto-video" src="${videoUrl}" preload="metadata" playsinline disablepictureinpicture></video><img class="livephoto-image" src="${imageUrl}" alt="实况照片" /><div class="livephoto-control-wrapper"><div class="livephoto-icon"><svg class="livephoto-icon-svg ${autoPlayEnabled ? '' : 'disabled'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="3" fill="currentColor"/>${autoPlayEnabled ? '' : '<line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="1.5"/>'}</svg><span class="livephoto-label">LIVE</span><svg class="livephoto-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="livephoto-dropdown"><div class="livephoto-dropdown-item" data-action="toggle-autoplay"><span class="dropdown-text">${autoPlayEnabled ? '关闭自动播放' : '开启自动播放'}</span><svg class="dropdown-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="3" fill="currentColor"/>${autoPlayEnabled ? '' : '<line x1="4" y1="4" x2="20" y2="20"/>'}</svg></div></div></div></div></div>`;
       }
-      
+
       // 初始化实况照片交互
       function initLivePhotoInteraction(slide) {
         try {
           let container = null;
-          
+
           if (slide.htmlEl) {
             container = slide.htmlEl.classList?.contains('fancybox-livephoto-container')
               ? slide.htmlEl
@@ -57,17 +61,17 @@
           if (!container && slide.el) {
             container = slide.el.querySelector('.fancybox-livephoto-container');
           }
-          
+
           if (!container) return;
-          
+
           const video = container.querySelector('.livephoto-video');
           const image = container.querySelector('.livephoto-image');
           const icon = container.querySelector('.livephoto-icon');
           const dropdown = container.querySelector('.livephoto-dropdown');
           const controlWrapper = container.querySelector('.livephoto-control-wrapper');
-          
+
           if (!video || !image || !icon) return;
-          
+
           const start = (e) => {
             e.stopPropagation();
             e.preventDefault();
@@ -77,7 +81,7 @@
               console.error('Live photo video play error:', err);
             });
           };
-          
+
           const leave = (e) => {
             if (e) {
               e.preventDefault();
@@ -85,52 +89,52 @@
             container.classList.remove('zoom');
             video.pause();
           };
-          
+
           const handleVideoEnded = () => {
             container.classList.remove('zoom');
           };
-          
+
           const preventContextMenu = (e) => {
             e.preventDefault();
             e.stopPropagation();
             return false;
           };
-          
+
           const chevron = icon.querySelector('.livephoto-chevron');
-          
+
           const showChevron = () => {
             controlWrapper?.classList.add('show-chevron');
           };
-          
+
           const hideChevron = () => {
             if (!controlWrapper?.classList.contains('show-dropdown')) {
               controlWrapper?.classList.remove('show-chevron');
             }
           };
-          
+
           const toggleDropdown = (e) => {
             e.stopPropagation();
             e.preventDefault();
             controlWrapper?.classList.toggle('show-dropdown');
           };
-          
+
           const hideDropdown = () => {
             controlWrapper?.classList.remove('show-dropdown');
           };
-          
+
           const isMobile = () => window.innerWidth <= 768;
-          
+
           // 切换自动播放按钮
           const toggleAutoPlayButton = container.querySelector('[data-action="toggle-autoplay"]');
           if (toggleAutoPlayButton) {
             toggleAutoPlayButton.addEventListener('click', (e) => {
               e.stopPropagation();
               toggleLivePhotoAutoPlay();
-              
+
               const text = toggleAutoPlayButton.querySelector('.dropdown-text');
               const iconSvg = toggleAutoPlayButton.querySelector('.dropdown-icon');
               const mainIconSvg = icon.querySelector('.livephoto-icon-svg');
-              
+
               if (text) {
                 text.textContent = livePhotoAutoPlay ? '关闭自动播放' : '开启自动播放';
               }
@@ -150,15 +154,15 @@
                   ${livePhotoAutoPlay ? '' : '<line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="1.5"/>'}
                 `;
               }
-              
+
               if (isMobile()) {
                 hideDropdown();
               }
             });
           }
-          
+
           let hasHoveredDropdown = false;
-          
+
           if (controlWrapper) {
             controlWrapper.addEventListener('mouseenter', () => {
               if (!isMobile()) {
@@ -175,7 +179,7 @@
               }
             });
           }
-          
+
           if (dropdown) {
             dropdown.addEventListener('mouseenter', () => {
               if (!isMobile()) {
@@ -183,7 +187,7 @@
               }
             });
           }
-          
+
           if (chevron) {
             chevron.addEventListener('click', (e) => {
               if (!isMobile()) {
@@ -192,7 +196,7 @@
               }
             });
           }
-          
+
           if (icon) {
             icon.addEventListener('click', (e) => {
               if (isMobile()) {
@@ -201,7 +205,7 @@
               }
             });
           }
-          
+
           const closeOnClickOutside = (e) => {
             if (!controlWrapper?.contains(e.target)) {
               hideDropdown();
@@ -212,10 +216,10 @@
             }
           };
           document.addEventListener('click', closeOnClickOutside);
-          
+
           icon.addEventListener('mouseenter', start);
           icon.addEventListener('mouseleave', leave);
-          
+
           const livephotoContent = container.querySelector('.livephoto-content');
           if (livephotoContent) {
             livephotoContent.addEventListener('touchstart', (e) => {
@@ -237,11 +241,11 @@
               leave(e);
             }, { passive: false });
           }
-          
+
           container.addEventListener('contextmenu', preventContextMenu, { passive: false });
           icon.addEventListener('contextmenu', preventContextMenu, { passive: false });
           video.addEventListener('ended', handleVideoEnded);
-          
+
           if (livePhotoAutoPlay) {
             setTimeout(() => {
               container.classList.add('zoom');
@@ -251,13 +255,13 @@
               });
             }, 300);
           }
-          
+
           slide.livePhotoPause = () => {
             video.pause();
             video.currentTime = 0;
             container.classList.remove('zoom');
           };
-          
+
           slide.livePhotoCleanup = () => {
             document.removeEventListener('click', closeOnClickOutside);
             icon.removeEventListener('mouseenter', start);
@@ -277,7 +281,7 @@
           console.error('Live photo init error:', error);
         }
       }
-      
+
       // 清理实况照片资源
       function cleanupLivePhoto(slide) {
         if (slide?.livePhotoCleanup) {
@@ -289,65 +293,78 @@
           }
         }
       }
-      
-      // 自定义 Fancybox 绑定，支持实况照片
+
+      // 自定义 Fancybox 绑定，支持实况照片并按 group 分组
       function bindFancybox() {
-        // 收集所有需要绑定的元素
         const elements = document.querySelectorAll(selector);
-        const items = [];
-        const elementMap = new Map();
-        
-        elements.forEach((el, index) => {
-          // 检查是否为实况照片容器
+        const groups = {}; // 存储不同分组的 items
+        const elementMap = new Map(); // 存储元素在其分组中的索引
+
+        // 1. 预处理：按 data-fancybox 分组
+        elements.forEach((el) => {
+          const groupName = el.getAttribute('data-fancybox') || 'default';
+          if (!groups[groupName]) {
+            groups[groupName] = [];
+          }
+
+          let item = {};
           if (el.classList.contains('livephoto-container')) {
-            // 实况照片
             const imageUrl = el.dataset.livephotoImage;
             const videoUrl = el.dataset.livephotoVideo;
-            
             if (imageUrl && videoUrl) {
-              items.push({
+              item = {
                 html: createLivePhotoHTML(imageUrl, videoUrl),
                 class: 'has-livephoto',
                 thumb: imageUrl,
-              });
+              };
             } else {
-              // 降级为普通图片
               const img = el.querySelector('img');
-              items.push({
-                src: img?.src || img?.dataset?.src || imageUrl,
+              item = {
+                src: img?.src || img?.dataset?.src || imageUrl || el.href,
                 type: 'image',
-                thumb: img?.src || img?.dataset?.src || imageUrl,
-              });
+                thumb: img?.src || img?.dataset?.src || imageUrl || el.href,
+              };
             }
           } else {
-            // 普通图片
-            items.push({
-              src: el.src || el.dataset.src,
-              type: 'image',
-              thumb: el.src || el.dataset.src,
-            });
+            const mediaSrc = el.src || el.dataset.src || el.href;
+            item = {
+              src: mediaSrc,
+              thumb: el.dataset.thumb || mediaSrc,
+            };
+            // 只有在明确指定了非默认类型时才设置 type，或者为视频文件指定 html5video
+            if (el.dataset.type) {
+              if (el.dataset.type === 'video' && mediaSrc.match(/\.(mp4|webm|ogg|avi|mov|m4v|mkv)(\?|#|$)/i)) {
+                item.type = 'html5video';
+              } else {
+                item.type = el.dataset.type;
+              }
+            }
           }
-          
-          elementMap.set(el, index);
+
+          elementMap.set(el, { groupName, index: groups[groupName].length });
+          groups[groupName].push(item);
         });
-        
-        // 为每个元素绑定点击事件
+
+        // 2. 绑定点击事件
         elements.forEach((el) => {
-          // 移除之前的事件监听器（如果有的话）
           if (el._fancyboxClickHandler) {
             el.removeEventListener('click', el._fancyboxClickHandler);
           }
-          
+
           const clickHandler = (e) => {
-            // 如果点击的是LIVE图标区域，不触发fancybox
             if (e.target.closest('.livephoto-overlay')) {
               return;
             }
-            
+
             e.preventDefault();
             e.stopPropagation();
-            const startIndex = elementMap.get(el);
-            
+
+            const groupInfo = elementMap.get(el);
+            if (!groupInfo) return;
+
+            const items = groups[groupInfo.groupName];
+            const startIndex = groupInfo.index;
+
             Fancybox.show(items, {
               theme: 'auto',
               zoomEffect: true,
@@ -377,21 +394,22 @@
                 ready: (fancybox) => {
                   const carousel = fancybox.getCarousel();
                   if (!carousel) return;
-                  
-                  const currentIndex = startIndex;
-                  
+
+                  // Use the startIndex from the groupInfo for the initial slide
+                  const initialSlideIndex = startIndex;
+
                   carousel.getSlides().forEach((slide, index) => {
                     if (!slide.html && !slide.htmlEl) return;
-                    
+
                     const slideEl = slide.el || slide.htmlEl;
                     const isLivePhotoSlide = slide.htmlEl?.classList?.contains('fancybox-livephoto-container') ||
                       slideEl?.querySelector('.fancybox-livephoto-container');
-                    
-                    if (isLivePhotoSlide && index === currentIndex) {
+
+                    if (isLivePhotoSlide && index === initialSlideIndex) {
                       initLivePhotoInteraction(slide);
                     }
                   });
-                  
+
                   carousel.on('change', (carousel, to, from) => {
                     if (from !== undefined) {
                       const slides = carousel.getSlides();
@@ -413,14 +431,14 @@
                         }
                       }
                     }
-                    
+
                     const currentSlide = carousel.getSlides()[to];
                     if (currentSlide && (currentSlide.html || currentSlide.htmlEl)) {
                       setTimeout(() => {
                         const slideEl = currentSlide.el || currentSlide.htmlEl;
                         const isLivePhotoSlide = currentSlide.htmlEl?.classList?.contains('fancybox-livephoto-container') ||
                           slideEl?.querySelector('.fancybox-livephoto-container');
-                        
+
                         if (isLivePhotoSlide) {
                           if (currentSlide.livePhotoCleanup) {
                             if (livePhotoAutoPlay) {
@@ -455,21 +473,20 @@
               },
             });
           };
-          
-          // 保存事件处理器引用以便后续移除
+
           el._fancyboxClickHandler = clickHandler;
           el.addEventListener('click', clickHandler);
         });
       }
-      
+
       // 初始化绑定
       bindFancybox();
-      
+
       // 监听动态内容变化
       const observer = new MutationObserver(() => {
         setTimeout(bindFancybox, 100);
       });
-      
+
       observer.observe(document.body, {
         childList: true,
         subtree: true
