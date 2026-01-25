@@ -17,6 +17,11 @@ utils.jq(() => {
             api = api.replace(/\/echo\/page\/?$/, '').replace(/\/$/, '');
 
             const limit = parseInt(el.getAttribute('limit')) || 10;
+            const default_avatar = el.getAttribute('avatar') || def.avatar;
+            const user_filter = el.getAttribute('user');
+            const hide_filter = el.getAttribute('hide')?.split(',') || [];
+            const loadmore_enabled = el.getAttribute('loadmore') !== 'false';
+            const forced_layout = el.getAttribute('layout');
             let currentPage = 1;
 
             const loadEchos = (page) => {
@@ -27,7 +32,8 @@ utils.jq(() => {
                     body: JSON.stringify({
                         page: page,
                         pageSize: limit,
-                        search: ''
+                        search: '',
+                        user: user_filter
                     })
                 })
                     .then(res => {
@@ -38,7 +44,7 @@ utils.jq(() => {
                         utils.onLoadSuccess(el);
                         if (resp.code === 1) {
                             renderEchos(el, resp.data.items, api);
-                            if (resp.data.items && resp.data.items.length === limit) {
+                            if (loadmore_enabled && resp.data.items && resp.data.items.length === limit) {
                                 updateLoadMore(el, page + 1);
                             } else {
                                 removeLoadMore(el);
@@ -58,6 +64,15 @@ utils.jq(() => {
                 if (!items) return;
                 const siteUrl = baseApi.replace(/\/api$/, '');
 
+                const getURL = (url) => {
+                    if (!url) return '';
+                    if (url.startsWith('http') || url.startsWith('//') || url.startsWith('data:')) {
+                        return url;
+                    }
+                    // 使用 baseApi 作为相对路径的基准，确保包含 /api 前缀
+                    return baseApi + (url.startsWith('/') ? '' : '/') + url;
+                };
+
                 const markedParse = (text) => {
                     if (typeof marked !== 'undefined' && marked.parse) {
                         return marked.parse(text);
@@ -70,23 +85,28 @@ utils.jq(() => {
                     node.className = 'timenode';
                     node.setAttribute('index', item.id);
 
-                    const isTextTop = item.layout === 'grid' || item.layout === 'horizontal';
+                    const postLayout = forced_layout || item.layout || 'grid';
+                    const isTextTop = postLayout === 'grid' || postLayout === 'horizontal';
 
                     let contentHtml = `<div class="content md-text">${markedParse(item.content || '')}</div>`;
-                    let galleryHtml = item.media && item.media.length > 0 ? renderGallery(item, item.media, item.layout, baseApi) : '';
+                    let galleryHtml = item.media && item.media.length > 0 ? renderGallery(item, item.media, postLayout, baseApi) : '';
                     let extensionHtml = item.extension ? renderExtension(item.extension, item.extension_type, baseApi) : '';
+
+                    const avatarUrl = item.user?.avatar ? getURL(item.user.avatar) : default_avatar;
 
                     let html = `
                     <div class="header">
+                        ${!hide_filter.includes('user') ? `
                         <div class="user-info">
-                            <img src="${item.user?.avatar || (siteUrl + '/favicon.ico')}" onerror="this.style.opacity='0'">
-                            <span>${item.user?.username || item.username}</span>
-                        </div>
+                            ${!hide_filter.includes('avatar') ? `<img src="${avatarUrl}" onerror="this.src='${default_avatar}'">` : ''}
+                            ${!hide_filter.includes('username') ? `<span>${item.user?.username || item.username}</span>` : ''}
+                        </div>` : ''}
                         <span>${new Date(item.created_at).toLocaleString()}</span>
                     </div>
                     <div class="body">
                         ${isTextTop ? contentHtml + galleryHtml : galleryHtml + contentHtml}
                         ${extensionHtml}
+                        ${!hide_filter.includes('footer') ? `
                         <div class="footer">
                             <div class="flex left">
                                 <a class="item origin" href="${siteUrl}/echo/${item.id}" target="_blank" rel="external nofollow noopener noreferrer">跳转原帖</a>
@@ -96,7 +116,7 @@ utils.jq(() => {
                                     <span>👍 <span class="count">${item.fav_count || 0}</span></span>
                                 </div>
                             </div>
-                        </div>
+                        </div>` : ''}
                     </div>
                 `;
 
@@ -109,16 +129,13 @@ utils.jq(() => {
                     }
                 });
 
-                // 处理懒加载和 Fancybox
-                if (window.StellarLivePhoto) window.StellarLivePhoto.init();
+                // 处理懒加载
                 if (window.wrapLazyloadImages) window.wrapLazyloadImages(container);
             };
 
             const renderGallery = (echo, media, layout, baseApi) => {
                 const l = layout || 'grid';
                 const caption = (echo.content || '').substring(0, 50).replace(/"/g, '&quot;').replace(/\n/g, ' ');
-                let html = `<div class="gallery layout-${l}" data-count="${media.length}">`;
-
                 // 过滤出要在画廊显示的媒体项（实况照片只显示图，视频部分隐藏）
                 const visibleMedia = media.filter(m => {
                     if (m.media_type === 'video') {
@@ -127,41 +144,52 @@ utils.jq(() => {
                     return true;
                 });
 
+                let html = `<div class="gallery layout-${l}" data-count="${visibleMedia.length}">`;
+
                 visibleMedia.forEach((m, idx) => {
                     const isLive = m.media_type === 'image' && m.live_video_id;
                     const liveVideo = isLive ? media.find(v => v.id === m.live_video_id) : null;
 
                     if (isLive && liveVideo) {
                         html += `
-                        <div class="livephoto-item">
-                            <a class="livephoto-container" href="${m.media_url}" 
-                               data-fancybox="gallery-${echo.id}" 
-                               data-caption="${caption}"
-                               data-livephoto-image="${m.media_url}" 
-                               data-livephoto-video="${liveVideo.media_url}">
-                                <img class="livephoto-image" src="${m.media_url}" loading="lazy">
-                                <video class="livephoto-video" src="${liveVideo.media_url}" preload="metadata" muted playsinline loop></video>
-                                <div class="livephoto-overlay">LIVE</div>
-                            </a>
+                        <div class="livephoto-container" 
+                             data-fancybox="gallery-${echo.id}" 
+                             data-caption="${caption}"
+                             data-livephoto-image="${m.media_url}" 
+                             data-livephoto-video="${liveVideo.media_url}">
+                            <img class="livephoto-image" src="${m.media_url}" loading="lazy">
+                            <video class="livephoto-video" src="${liveVideo.media_url}" preload="metadata" muted playsinline disablepictureinpicture></video>
+                            <div class="livephoto-overlay" title="点击查看实况照片">
+                                <svg class="livephoto-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                    <circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                    <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                                </svg>
+                                <span class="livephoto-text">LIVE</span>
+                            </div>
                         </div>
                     `;
                     } else if (m.media_type === 'video') {
                         html += `
                         <div class="video-container">
-                            <a href="${m.media_url}" data-fancybox="gallery-${echo.id}" data-type="video" data-thumb="${m.media_url}#t=0.1" data-caption="${caption}">
-                                <video src="${m.media_url}#t=0.1" preload="metadata" muted></video>
-                                <div class="play-overlay">
-                                    <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M8 5v14l11-7z"/></svg>
-                                </div>
-                            </a>
+                            <video src="${m.media_url}#t=0.1" 
+                                   preload="metadata" 
+                                   muted
+                                   data-fancybox="gallery-${echo.id}" 
+                                   data-type="video"
+                                   data-caption="${caption}"></video>
+                            <div class="play-overlay">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                            </div>
                         </div>
                     `;
                     } else {
                         html += `
                         <div class="image-container">
-                            <a href="${m.media_url}" data-fancybox="gallery-${echo.id}" data-src="${m.media_url}" data-caption="${caption}">
-                                <img src="${m.media_url}" loading="lazy">
-                            </a>
+                            <img src="${m.media_url}" 
+                                 loading="lazy"
+                                 data-fancybox="gallery-${echo.id}" 
+                                 data-caption="${caption}">
                         </div>
                     `;
                     }

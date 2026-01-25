@@ -31,11 +31,11 @@
             downloadFileEvent(ctx.files);
           });
         }
-} else {
+      } else {
         const els = document.getElementsByClassName(`ds-${id}`);
         if (els?.length > 0) {
           utils.jq(() => {
-            if (id == 'timeline' || 'memos' || 'marked') {
+            if (id == 'timeline' || id == 'memos' || id == 'ech0' || id == 'marked') {
               utils.js(deps.marked).then(function () {
                 utils.js(js, { defer: true });
               });
@@ -83,14 +83,14 @@
     // chat quote
     const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
       entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
-          observer.unobserve(entry.target);
+        observer.unobserve(entry.target);
+        setTimeout(() => {
+          entry.target.classList.add('quote-blink');
           setTimeout(() => {
-            entry.target.classList.add('quote-blink');
-            setTimeout(() => {
-              entry.target.classList.remove('quote-blink');
-            }, 1000);
-          }, Math.max(100, 16) * (index + 1));
-        });
+            entry.target.classList.remove('quote-blink');
+          }, 1000);
+        }, Math.max(100, 16) * (index + 1));
+      });
     });
 
     var chatQuotes = document.querySelectorAll(".chat .talk .quote");

@@ -504,6 +504,8 @@ data_services:
     js: /js/services/fcircle.js
   weibo:
     js: /js/services/weibo.js
+  ech0:
+    js: /js/services/ech0.js
   memos:
     js: /js/services/memos.js
   # chat
