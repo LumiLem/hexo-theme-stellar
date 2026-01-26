@@ -83,7 +83,7 @@ ech0:
   title: 我的动态
   api: https://moments.lumlime.cn/api
   limit: 5
-  hide: footer
+  hide: user
 
 tagtree:
   layout: tagtree
