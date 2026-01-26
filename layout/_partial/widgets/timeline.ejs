@@ -13,14 +13,17 @@ function layoutDiv() {
     el += '<div class="widget-body fs14">';
       el += `<div class="tag-plugin timeline data-service ds-${(item.type || 'timeline')}"`;
       // 动态遍历所有属性
-      const excludeKeys = ['title', 'type']; // 已用于其他用途的属性
+      const excludeKeys = ['title', 'type', 'layout']; // 排除 layout，因为它由 Hexo 引擎使用
       const dataKeys = ['api']; // 需要添加 data- 前缀的属性
       
       Object.keys(item).forEach(key => {
         if (excludeKeys.includes(key) || !item[key]) {
           return;
         }
-        if (dataKeys.includes(key)) {
+        if (key === 'style') {
+          // 关键转换：将 style 转换为 ech0 需要的 layout 属性
+          el += ' layout="' + item[key] + '"';
+        } else if (dataKeys.includes(key)) {
           el += ' data-' + key + '="' + item[key] + '"';
         } else {
           el += ' ' + key + '="' + item[key] + '"';

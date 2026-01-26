@@ -4,29 +4,18 @@
 // =============================================
 
 .tag-plugin.timeline.ds-ech0
-  padding-left: 0
-  &:before
-    display: none
+  padding-left: 16px
   
   .timenode 
-    padding-left: 16px
-    &:before
-      content: ''
-      position: absolute
-      z-index: 0
-      background: var(--block)
-      width: 4px
-      left: 0px
-      border-radius: 8px
-      top: 0.5rem
-      bottom: 0
+    position: relative
     &+.timenode
       margin-top: 2rem
     
     .body
+      width: 100%
       padding: 0
       background: var(--card)
-      border-radius: 12px
+      border-radius: $border-card
       box-shadow: $boxshadow-card
       overflow: hidden
       border: 1px solid var(--block-border)
@@ -45,17 +34,40 @@
       
       .footer
         padding: 0.5rem 1rem
+        display: flex
+        flex-wrap: wrap
+        justify-content: space-between
+        align-items: stretch
         border-top: 1px solid var(--block-border)
-        background: var(--block)
+        background: transparent
+        user-select: none
         .flex
-          gap: 8px
+          display: flex
+          flex-wrap: wrap
+          gap: 4px
+          align-items: stretch
         .item
-          border-radius: 6px
-          font-size: $fs-12
-          padding: 2px 8px
-          background: var(--card)
-          border: 1px solid var(--block-border)
-          trans1 all
+          border-width: 1px
+          border-style: solid
+          margin: 2px
+          border-radius: 4px
+          padding: 0 0.5rem
+          display: flex 
+          align-items: center
+          font-size: $fs-13
+          font-weight: 500
+          border-color: var(--block-border)
+          background: var(--block)
+          color: var(--text-p3)
+          trans2 color background border-color
+          svg
+            width: 1.25em
+            height: 1.25em
+            margin-right: 2px
+            flex-shrink: 0
+          .count
+            margin-left: 2px
+            line-height: 0
           &.like
             cursor: pointer
             &:hover
@@ -64,11 +76,17 @@
               color: var(--accent)
               border-color: var(--accent)
               background: rgba(128, 128, 128, 0.05)
-          &.origin
-            color: var(--text-p3)
+          &.origin, &.share
+            cursor: pointer
             &:hover
-              color: var(--accent)
-              border-color: var(--accent)
+              background: var(--block-border)
+          &.label
+            background: transparent
+            border-color: transparent
+            color: var(--text-p3)
+            padding: 0
+            margin-right: 8px
+            font-weight: 400
 
   // =============================================
   // 通用媒体样式
@@ -76,7 +94,7 @@
   .gallery
     img, video
       width: 100%
-      border-radius: 6px
+      border-radius: $border-image
       display: block
       background: var(--block)
       object-fit: cover
@@ -89,8 +107,7 @@
     .livephoto-container
       position: relative
       overflow: hidden
-      border-radius: 6px
-      background: var(--block)
+      border-radius: $border-image
 
     .video-container 
       .play-overlay
@@ -116,16 +133,19 @@
     // Live Photo 样式已由全局 livephoto.styl 提供
     // 结构与文章内页保持一致，此处覆盖 inline-grid 以适配画廊布局
     .livephoto-container
-      display: block  // 覆盖 livephoto.styl 的 inline-grid
       position: relative
       width: 100%
       border-radius: 6px
       overflow: hidden
+      // 覆盖 livephoto.styl 的悬停效果，与普通图片/视频保持一致
+      &:hover
+        transform: none
+        box-shadow: none
       .livephoto-image
         display: block
         width: 100%
         height: auto
-        border-radius: 6px
+        border-radius: $border-image
       .livephoto-video
         position: absolute
         top: 0
@@ -134,7 +154,7 @@
         height: 100%
         object-fit: cover
         opacity: 0
-        border-radius: 6px
+        border-radius: $border-image
 
   // =============================================
   // 布局一：九宫格 (Grid) - 微信朋友圈/Instagram风格
@@ -168,16 +188,21 @@
     &[data-count="4"]
       grid-template-columns: repeat(2, 1fr)
     
-    // 多图通用：强制正方形
+    // 多图通用：强制正方形并居中裁切
     &:not([data-count="1"])
       .image-container,
       .video-container,
       .livephoto-container
         aspect-ratio: 1
-        img, video
+        width: 100%
+        overflow: hidden
+        display: grid
+        img, video, .livephoto-image, .livephoto-video
           width: 100%
           height: 100%
           object-fit: cover
+          object-position: center
+          grid-area: 1 / 1
 
   // =============================================
   // 布局二：瀑布流 (Waterfall) - Pinterest/小红书风格
@@ -211,14 +236,22 @@
     overflow-x: auto
     overflow-y: hidden
     gap: 6px
-    padding-bottom: 6px
+    padding-bottom: 8px
     scroll-behavior: smooth
     -webkit-overflow-scrolling: touch
     
-    // 隐藏滚动条但保持功能
-    scrollbar-width: none
+    // 美化滚动条
+    scrollbar-width: thin
+    scrollbar-color: var(--text-p4) transparent
     &::-webkit-scrollbar
-      display: none
+      height: 4px
+    &::-webkit-scrollbar-track
+      background: transparent
+    &::-webkit-scrollbar-thumb
+      background: var(--text-p4)
+      border-radius: 4px
+      &:hover
+        background: var(--text-p3)
     
     .image-container,
     .video-container,
@@ -226,48 +259,77 @@
       flex: 0 0 auto
       width: 140px
       height: 186px
-      border-radius: 8px
+      border-radius: $border-image
       
       img, video
         width: 100%
         height: 100%
         object-fit: cover
-        border-radius: 8px
+        border-radius: $border-image
 
   // =============================================
-  // 布局四：轮播图 (Carousel) - 微博/Facebook风格
-  // 特点：全宽展示，滑动切换，沉浸体验
+  // 布局四：轮播图 (Carousel) - Ech0 原版风格
+  // 特点：一次只显示一张图，通过按钮切换
   // =============================================
   .gallery.layout-carousel
-    display: flex
-    overflow-x: auto
-    overflow-y: hidden
-    scroll-snap-type: x mandatory
-    scroll-behavior: smooth
-    -webkit-overflow-scrolling: touch
+    position: relative
     border-radius: 8px
-    background: #000
+    overflow: hidden
     
-    // 隐藏滚动条
-    scrollbar-width: none
-    &::-webkit-scrollbar
-      display: none
-    
-    .image-container,
-    .video-container,
-    .livephoto-container
-      flex: 0 0 100%
-      scroll-snap-align: start
-      scroll-snap-stop: always
-      aspect-ratio: 4/3
-      background: #000
+    .carousel-slide
+      position: relative
+      width: 100%
       
       img, video
         width: 100%
-        height: 100%
-        object-fit: contain
-        border-radius: 0
-        background: #000
+        height: auto
+        display: block
+        border-radius: $border-image
+    
+    // 隐藏非当前项
+    .image-container,
+    .video-container,
+    .livephoto-container
+      display: none
+      &.active
+        display: block
+  
+  .carousel-nav
+    display: flex
+    align-items: center
+    justify-content: center
+    gap: 12px
+    margin-top: 12px
+    color: var(--text-p3)
+    
+    .nav-btn
+      display: flex
+      align-items: center
+      justify-content: center
+      width: 32px
+      height: 32px
+      border-radius: 50%
+      border: 1px solid var(--block-border)
+      background: var(--card)
+      color: var(--text-p2)
+      cursor: pointer
+      transition: all 0.2s ease
+      &:hover:not(:disabled)
+        background: var(--block-hover)
+        color: var(--accent)
+        border-color: var(--accent)
+      &:disabled
+        opacity: 0.4
+        cursor: not-allowed
+      svg
+        width: 16px
+        height: 16px
+        fill: currentColor
+    
+    .carousel-counter
+      font-size: $fs-13
+      min-width: 60px
+      text-align: center
 
   // =============================================
   // 扩展内容样式
@@ -275,6 +337,17 @@
   .tag-plugin.audio-player
     padding: 0.5rem 1rem
   
+  .tag-plugin.video-player
+    margin: 0.5rem 0.75rem
+    border-radius: 8px
+    overflow: hidden
+    background: #000
+    iframe, video 
+      display: block
+      width: 100%
+      height: 100%
+      border: none
+
   .tag-plugin.link
     margin: 0.5rem 1rem
 
@@ -282,24 +355,37 @@
   // 加载更多按钮
   // =============================================
   .load-more
-    padding: 0.6rem 2rem
-    border-radius: 20px
-    font-size: $fs-13
+    display: flex
+    align-items: center
+    gap: 6px
+    padding: 0.5rem 1.5rem
+    border-radius: $border-button
+    font-size: $fs-14
     font-weight: 500
     margin: 2rem auto
     width: fit-content
-    background: var(--card)
-    border: 1px solid var(--block-border)
+    background: var(--block)
     color: var(--text-p2)
-    box-shadow: $boxshadow-card
     cursor: pointer
     user-select: none
-    trans1 all
+    trans2 color background
+    svg
+      width: 1.1em
+      height: 1.1em
+      color: var(--text-p4)
+      trans1 color
+      &.loading
+        animation: spin 1s linear infinite
     &:hover
-      background: var(--accent)
-      color: white
-      border-color: var(--accent)
-      transform: translateY(-2px)
-      box-shadow: $boxshadow-card-float
+      background: var(--theme-a20)
+      color: var(--theme)
+      svg
+        color: var(--theme)
     &:active
-      transform: translateY(0)
+      opacity: 0.8
+
+@keyframes spin
+  from
+    transform: rotate(0deg)
+  to
+    transform: rotate(360deg)

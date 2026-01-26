@@ -77,6 +77,14 @@ latest_comment:
   type: # 选择评论服务
   limit: 16 # 限制获取数量
 
+ech0:
+  layout: timeline
+  type: ech0
+  title: 我的动态
+  api: https://moments.lumlime.cn/api
+  limit: 5
+  hide: footer
+
 tagtree:
   layout: tagtree
   expand_all: false # 是否展开所有节点

@@ -109,11 +109,18 @@ utils.jq(() => {
                         ${!hide_filter.includes('footer') ? `
                         <div class="footer">
                             <div class="flex left">
-                                <a class="item origin" href="${siteUrl}/echo/${item.id}" target="_blank" rel="external nofollow noopener noreferrer">跳转原帖</a>
+                                ${item.tags ? item.tags.map(t => `<div class="item label"># ${t.name}</div>`).join('') : ''}
                             </div>
                             <div class="flex right">
+                                <div class="item share" data-url="${siteUrl}/echo/${item.id}" title="复制链接">
+                                    <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".5"/><path fill="currentColor" d="M10 13c-.221 0-.43-.086-.585-.243l-3.172-3.172a1 1 0 0 1 1.414-1.414l2.465 2.465l6.303-6.303a1 1 0 0 1 1.414 1.414l-7.014 7.014A.825.825 0 0 1 10 13z" opacity=".8"/><path fill="currentColor" d="M14.829 6.343a4 4 0 0 0-5.657 5.657l.707.707a1 1 0 0 1-1.414 1.414l-.707-.707a6 6 0 0 1 8.485-8.485l3.535 3.536a6 6 0 0 1-8.485 8.485l-.707-.707a1 1 0 0 1 1.414-1.414l.707.707a4 4 0 0 0 5.657-5.657l-3.536-3.536z"/></svg>
+                                </div>
+                                <a class="item origin" href="${siteUrl}/echo/${item.id}" target="_blank" rel="external nofollow noopener noreferrer" title="跳转原帖">
+                                    <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".5"/><path fill="currentColor" d="M14.5 12c0-.3-.1-.5-.3-.7l-3-3a1 1 0 0 0-1.4 1.4l2.3 2.3-2.3 2.3a1 1 0 0 0 1.4 1.4l3-3c.2-.2.3-.4.3-.7z"/></svg>
+                                </a>
                                 <div class="item reaction like ${hasLiked(item.id) ? 'active' : ''}" data-id="${item.id}">
-                                    <span>👍 <span class="count">${item.fav_count || 0}</span></span>
+                                    <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".5"/><path fill="currentColor" d="M12 16.5c-.2 0-.4-.1-.5-.2l-3-3c-.9-.9-.9-2.4 0-3.3s2.4-.9 3.3 0L12 10.2l.2-.2c.9-.9 2.4-.9 3.3 0s.9 2.4 0 3.3l-3 3c-.1.1-.3.2-.5.2z"/></svg>
+                                    <span class="count">${item.fav_count || 0}</span>
                                 </div>
                             </div>
                         </div>` : ''}
@@ -144,16 +151,19 @@ utils.jq(() => {
                     return true;
                 });
 
+                const isCarousel = l === 'carousel';
                 let html = `<div class="gallery layout-${l}" data-count="${visibleMedia.length}">`;
 
                 visibleMedia.forEach((m, idx) => {
                     const isLive = m.media_type === 'image' && m.live_video_id;
                     const liveVideo = isLive ? media.find(v => v.id === m.live_video_id) : null;
+                    // 轮播图模式：第一张默认显示
+                    const activeClass = isCarousel ? (idx === 0 ? ' active' : '') : '';
 
                     if (isLive && liveVideo) {
                         html += `
-                        <div class="livephoto-container" 
-                             data-fancybox="gallery-${echo.id}" 
+                        <div class="livephoto-container${activeClass}" 
+                             data-fancybox="ech0-${i}-${echo.id}" 
                              data-caption="${caption}"
                              data-livephoto-image="${m.media_url}" 
                              data-livephoto-video="${liveVideo.media_url}">
@@ -171,11 +181,11 @@ utils.jq(() => {
                     `;
                     } else if (m.media_type === 'video') {
                         html += `
-                        <div class="video-container">
+                        <div class="video-container${activeClass}">
                             <video src="${m.media_url}#t=0.1" 
                                    preload="metadata" 
                                    muted
-                                   data-fancybox="gallery-${echo.id}" 
+                                   data-fancybox="ech0-${i}-${echo.id}" 
                                    data-type="video"
                                    data-caption="${caption}"></video>
                             <div class="play-overlay">
@@ -185,10 +195,10 @@ utils.jq(() => {
                     `;
                     } else {
                         html += `
-                        <div class="image-container">
+                        <div class="image-container${activeClass}">
                             <img src="${m.media_url}" 
                                  loading="lazy"
-                                 data-fancybox="gallery-${echo.id}" 
+                                 data-fancybox="ech0-${i}-${echo.id}" 
                                  data-caption="${caption}">
                         </div>
                     `;
@@ -196,6 +206,21 @@ utils.jq(() => {
                 });
 
                 html += '</div>';
+
+                // 轮播图添加导航（图片下方，显示页码）
+                if (isCarousel && visibleMedia.length > 1) {
+                    html += `
+                    <div class="carousel-nav">
+                        <button class="nav-btn prev" aria-label="上一张">
+                            <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                        </button>
+                        <span class="carousel-counter">1 / ${visibleMedia.length}</span>
+                        <button class="nav-btn next" aria-label="下一张">
+                            <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                        </button>
+                    </div>`;
+                }
+
                 return html;
             };
 
@@ -265,20 +290,20 @@ utils.jq(() => {
                 if (type === 'VIDEO') {
                     if (ext.startsWith('BV')) {
                         return `
-                        <div class="tag-plugin video-player shadow" style="aspect-ratio:16/9;max-width:100%;margin:0.5rem 1rem;">
-                            <iframe src="https://player.bilibili.com/player.html?bvid=${ext}&autoplay=false" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width:100%;height:100%;border-radius:8px;"></iframe>
+                        <div class="tag-plugin video-player shadow" style="aspect-ratio:16/9;">
+                            <iframe src="https://player.bilibili.com/player.html?bvid=${ext}&autoplay=false" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
                         </div>
                     `;
                     } else if (/^[a-zA-Z0-9_-]{11}$/.test(ext)) {
                         return `
-                        <div class="tag-plugin video-player shadow" style="aspect-ratio:16/9;max-width:100%;margin:0.5rem 1rem;">
-                            <iframe src="https://www.youtube.com/embed/${ext}" frameborder="0" allowfullscreen="true" style="width:100%;height:100%;border-radius:8px;"></iframe>
+                        <div class="tag-plugin video-player shadow" style="aspect-ratio:16/9;">
+                            <iframe src="https://www.youtube.com/embed/${ext}" frameborder="0" allowfullscreen="true"></iframe>
                         </div>
                     `;
                     } else {
                         return `
-                        <div class="tag-plugin video-player shadow" style="max-width:100%;margin:0.5rem 1rem;">
-                            <video controls preload="metadata" playsinline webkit-playsinline style="width:100%;border-radius:8px;">
+                        <div class="tag-plugin video-player shadow">
+                            <video controls preload="metadata" playsinline webkit-playsinline>
                                 <source src="${ext}" type="video/mp4">
                             </video>
                         </div>
@@ -320,9 +345,12 @@ utils.jq(() => {
                     btn.style.marginTop = '1rem';
                     container.appendChild(btn);
                 }
-                btn.innerHTML = '<span>加载更多</span>';
+                const iconLoad = '<svg class="loading" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" opacity=".5" d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"/></svg>';
+                const iconMore = '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".5"/><path fill="currentColor" d="M12 7a.75.75 0 0 1 .75.75v3.5h3.5a.75.75 0 0 1 0 1.5h-3.5v3.5a.75.75 0 0 1-1.5 0v-3.5h-3.5a.75.75 0 0 1 0-1.5h3.5v-3.5A.75.75 0 0 1 12 7Z"/></svg>';
+
+                btn.innerHTML = `${iconMore}<span>加载更多</span>`;
                 btn.onclick = () => {
-                    btn.innerHTML = '<span>正在加载...</span>';
+                    btn.innerHTML = `${iconLoad}<span>正在加载...</span>`;
                     loadEchos(nextPage);
                 };
             };
@@ -354,12 +382,78 @@ utils.jq(() => {
                     });
             };
 
-            // 事件委托：点赞
+            // 事件委托：点赞 + 分享 + 轮播图
             el.addEventListener('click', (e) => {
                 const likeBtn = e.target.closest('.like');
                 if (likeBtn) {
                     const id = parseInt(likeBtn.dataset.id);
                     toggleLike(id, likeBtn);
+                    return;
+                }
+
+                const shareBtn = e.target.closest('.share');
+                if (shareBtn) {
+                    const url = shareBtn.dataset.url;
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(url).then(() => {
+                            if (typeof hud !== 'undefined') hud.toast('链接已复制', 2500);
+                        });
+                    } else {
+                        // 回退方案
+                        const input = document.createElement('input');
+                        input.setAttribute('value', url);
+                        document.body.appendChild(input);
+                        input.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(input);
+                        if (typeof hud !== 'undefined') hud.toast('链接已复制', 2500);
+                    }
+                    return;
+                }
+
+                // 轮播图导航按钮
+                const navBtn = e.target.closest('.carousel-nav .nav-btn');
+                if (navBtn) {
+                    const nav = navBtn.closest('.carousel-nav');
+                    const gallery = nav.previousElementSibling; // gallery 在 nav 之前
+                    if (!gallery || !gallery.classList.contains('layout-carousel')) return;
+
+                    const items = gallery.querySelectorAll('.image-container, .video-container, .livephoto-container');
+                    const total = items.length;
+                    if (total <= 1) return;
+
+                    // 找到当前 active 的索引
+                    let currentIndex = 0;
+                    items.forEach((item, idx) => {
+                        if (item.classList.contains('active')) currentIndex = idx;
+                    });
+
+                    // 计算新索引
+                    let newIndex = currentIndex;
+                    if (navBtn.classList.contains('prev')) {
+                        newIndex = Math.max(0, currentIndex - 1);
+                    } else {
+                        newIndex = Math.min(total - 1, currentIndex + 1);
+                    }
+
+                    // 切换 active 类
+                    items.forEach((item, idx) => {
+                        item.classList.toggle('active', idx === newIndex);
+                    });
+
+                    // 更新计数器
+                    const counter = nav.querySelector('.carousel-counter');
+                    if (counter) {
+                        counter.textContent = `${newIndex + 1} / ${total}`;
+                    }
+
+                    // 更新按钮禁用状态
+                    const prevBtn = nav.querySelector('.nav-btn.prev');
+                    const nextBtn = nav.querySelector('.nav-btn.next');
+                    if (prevBtn) prevBtn.disabled = newIndex === 0;
+                    if (nextBtn) nextBtn.disabled = newIndex === total - 1;
+
+                    return;
                 }
             });
 
