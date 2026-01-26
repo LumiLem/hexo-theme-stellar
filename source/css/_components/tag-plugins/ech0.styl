@@ -5,25 +5,38 @@
 
 .tag-plugin.timeline.ds-ech0
   padding-left: 16px
+  .widget-wrapper &
+    padding-left: 0
+
   
   .timenode 
     position: relative
     &+.timenode
       margin-top: 2rem
+      .widget-wrapper &
+        margin-top: 1rem
     
     .body
-      width: 100%
+      width: auto
       padding: 0
       background: var(--card)
       border-radius: $border-card
       box-shadow: $boxshadow-card
       overflow: hidden
       border: 1px solid var(--block-border)
+      margin-top: 4px
+      
+      .widget-wrapper &
+        margin: 0.25rem var(--gap-padding)
+        border-radius: $border-card-s
       
       .content
         padding: 0.75rem 1rem
         font-size: $fs-15
         line-height: 1.6
+        .widget-wrapper &
+          padding: 0.5rem 0.75rem
+          font-size: $fs-14
         p 
           margin: 0
           &:not(:last-child)
@@ -31,6 +44,8 @@
 
       .gallery
         padding: 0 0.75rem 0.5rem
+        .widget-wrapper &
+          padding: 0 0.5rem 0.5rem
       
       .footer
         padding: 0.5rem 1rem
@@ -41,6 +56,8 @@
         border-top: 1px solid var(--block-border)
         background: transparent
         user-select: none
+        .widget-wrapper &
+          padding: 0.5rem
         .flex
           display: flex
           flex-wrap: wrap
@@ -52,6 +69,10 @@
           margin: 2px
           border-radius: 4px
           padding: 0 0.5rem
+          .widget-wrapper &
+            padding: 0 0.25rem
+            margin: 1px
+            font-size: $fs-12
           display: flex 
           align-items: center
           font-size: $fs-13
@@ -164,8 +185,12 @@
     display: grid
     gap: 4px
     
-    // 默认三列
+    // 默认三列，侧边栏两列
     grid-template-columns: repeat(3, 1fr)
+    .widget-wrapper &
+      grid-template-columns: repeat(2, 1fr)
+      &[data-count="4"]
+        grid-template-columns: repeat(2, 1fr)
     
     // 单图：大图展示，保持原始比例
     &[data-count="1"]
@@ -212,6 +237,8 @@
     display: block
     column-count: 2
     column-gap: 6px
+    .widget-wrapper &
+      column-count: 1
     
     .image-container,
     .video-container,
