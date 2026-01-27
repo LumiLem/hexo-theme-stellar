@@ -368,36 +368,12 @@
             const startIndex = groupInfo.index;
 
             Fancybox.show(items, {
-              theme: 'auto',
-              zoomEffect: true,
-              fadeEffect: true,
               startIndex: startIndex,
-              backdropClick: 'close',
-              dragToClose: true,
-              closeButton: 'auto',
-              keyboard: {
-                Escape: 'close',
-                ArrowRight: 'next',
-                ArrowLeft: 'prev',
-                Delete: 'close',
-                Backspace: 'close',
-                ArrowDown: 'next',
-                ArrowUp: 'prev',
-                PageUp: 'close',
-                PageDown: 'close',
-              },
-              Carousel: {
-                Thumbs: {
-                  type: 'classic',
-                  showOnStart: true,
-                },
-              },
               on: {
                 ready: (fancybox) => {
                   const carousel = fancybox.getCarousel();
                   if (!carousel) return;
 
-                  // Use the startIndex from the groupInfo for the initial slide
                   const initialSlideIndex = startIndex;
 
                   carousel.getSlides().forEach((slide, index) => {
