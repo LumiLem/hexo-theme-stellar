@@ -60,6 +60,13 @@ utils.jq(() => {
                     });
             };
 
+            const markedParse = (text) => {
+                if (typeof marked !== 'undefined' && marked.parse) {
+                    return marked.parse(text, { breaks: true, gfm: true });
+                }
+                return text;
+            };
+
             const renderEchos = (container, items, baseApi) => {
                 if (!items) return;
                 const siteUrl = baseApi.replace(/\/api$/, '');
@@ -71,13 +78,6 @@ utils.jq(() => {
                     }
                     // 使用 baseApi 作为相对路径的基准，确保包含 /api 前缀
                     return baseApi + (url.startsWith('/') ? '' : '/') + url;
-                };
-
-                const markedParse = (text) => {
-                    if (typeof marked !== 'undefined' && marked.parse) {
-                        return marked.parse(text);
-                    }
-                    return text;
                 };
 
                 items.forEach(item => {
@@ -142,7 +142,7 @@ utils.jq(() => {
 
             const renderGallery = (echo, media, layout, baseApi) => {
                 const l = layout || 'grid';
-                const caption = (echo.content || '').substring(0, 50).replace(/"/g, '&quot;').replace(/\n/g, ' ');
+                const caption = markedParse(echo.content || '').replace(/"/g, '&quot;');
                 // 过滤出要在画廊显示的媒体项（实况照片只显示图，视频部分隐藏）
                 const visibleMedia = media.filter(m => {
                     if (m.media_type === 'video') {

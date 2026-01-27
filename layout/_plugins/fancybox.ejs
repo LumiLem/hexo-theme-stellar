@@ -316,6 +316,7 @@
                 html: createLivePhotoHTML(imageUrl, videoUrl),
                 class: 'has-livephoto',
                 thumb: imageUrl,
+                caption: el.dataset.caption,
               };
             } else {
               const img = el.querySelector('img');
@@ -330,6 +331,7 @@
             item = {
               src: mediaSrc,
               thumb: el.dataset.thumb || mediaSrc,
+              caption: el.dataset.caption,
             };
             // 只有在明确指定了非默认类型时才设置 type，或者为视频文件指定 html5video
             if (el.dataset.type) {
