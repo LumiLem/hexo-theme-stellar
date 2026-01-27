@@ -77,43 +77,50 @@
           gap: 4px
           align-items: stretch
         .item
-          border-width: 1px
-          border-style: solid
           margin: 2px
-          border-radius: 4px
-          padding: 0 0.5rem
+          border-radius: 12px // 更圆润的药丸形状
+          padding: 4px 10px
           .widget-wrapper &
-            padding: 0 0.25rem
+            padding: 2px 6px
             margin: 1px
             font-size: $fs-12
           display: flex 
           align-items: center
           font-size: $fs-13
           font-weight: 500
-          border-color: var(--block-border)
           background: var(--block)
           color: var(--text-p3)
-          trans2 color background border-color
+          border: none // 移除边框，减少视觉干扰
+          transition: all 0.2s ease-out
+          
           svg
-            width: 1.25em
-            height: 1.25em
-            margin-right: 2px
+            width: 1.1em
+            height: 1.1em
             flex-shrink: 0
+            stroke-width: 2.25px
+            
           .count
             margin-left: 2px
-            line-height: 0
-          &.like
+            line-height: 1
+            opacity: 0.9
+
+          &.share // 分享按钮没有数字，强制图标居中
+            padding: 4px 8px
+            svg
+              margin-right: 0
+
+          &.like, &.comments, &.share
             cursor: pointer
             &:hover
               background: var(--block-hover)
-            &.active
-              color: var(--accent)
-              border-color: var(--accent)
-              background: rgba(128, 128, 128, 0.05)
-          &.origin, &.share
-            cursor: pointer
-            &:hover
-              background: var(--block-border)
+              color: var(--text-p1)
+              transform: translateY(-1px) // 微弱的弹起感
+              
+          &.like.active
+            color: var(--accent)
+            background: var(--theme-a10) // 使用主题预定义的 10% 透明度背景
+            svg
+              fill: var(--accent)
           &.label
             background: transparent
             border-color: transparent

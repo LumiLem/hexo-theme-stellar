@@ -113,13 +113,14 @@ utils.jq(() => {
                             </div>
                             <div class="flex right">
                                 <div class="item share" data-url="${siteUrl}/echo/${item.id}" title="复制链接">
-                                    <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".5"/><path fill="currentColor" d="M10 13c-.221 0-.43-.086-.585-.243l-3.172-3.172a1 1 0 0 1 1.414-1.414l2.465 2.465l6.303-6.303a1 1 0 0 1 1.414 1.414l-7.014 7.014A.825.825 0 0 1 10 13z" opacity=".8"/><path fill="currentColor" d="M14.829 6.343a4 4 0 0 0-5.657 5.657l.707.707a1 1 0 0 1-1.414 1.414l-.707-.707a6 6 0 0 1 8.485-8.485l3.535 3.536a6 6 0 0 1-8.485 8.485l-.707-.707a1 1 0 0 1 1.414-1.414l.707.707a4 4 0 0 0 5.657-5.657l-3.536-3.536z"/></svg>
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                                 </div>
-                                <a class="item origin" href="${siteUrl}/echo/${item.id}" target="_blank" rel="external nofollow noopener noreferrer" title="跳转原帖">
-                                    <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".5"/><path fill="currentColor" d="M14.5 12c0-.3-.1-.5-.3-.7l-3-3a1 1 0 0 0-1.4 1.4l2.3 2.3-2.3 2.3a1 1 0 0 0 1.4 1.4l3-3c.2-.2.3-.4.3-.7z"/></svg>
+                                <a class="item comments" href="${siteUrl}/echo/${item.id}#comments" target="_blank" rel="external nofollow noopener noreferrer" title="查看评论" data-path="/echo/${item.id}">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                                    <span class="count">0</span>
                                 </a>
                                 <div class="item reaction like ${hasLiked(item.id) ? 'active' : ''}" data-id="${item.id}">
-                                    <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".5"/><path fill="currentColor" d="M12 16.5c-.2 0-.4-.1-.5-.2l-3-3c-.9-.9-.9-2.4 0-3.3s2.4-.9 3.3 0L12 10.2l.2-.2c.9-.9 2.4-.9 3.3 0s.9 2.4 0 3.3l-3 3c-.1.1-.3.2-.5.2z"/></svg>
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="${hasLiked(item.id) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                                     <span class="count">${item.fav_count || 0}</span>
                                 </div>
                             </div>
@@ -138,6 +139,8 @@ utils.jq(() => {
 
                 // 处理懒加载
                 if (window.wrapLazyloadImages) window.wrapLazyloadImages(container);
+                // 获取 Twikoo 评论数
+                loadTwikooCounts(container, items);
             };
 
             const renderGallery = (echo, media, layout, baseApi) => {
@@ -459,5 +462,41 @@ utils.jq(() => {
 
             loadEchos(currentPage);
         }
+
+        const loadTwikooCounts = (container, items) => {
+            if (!ctx.twikoo || !ctx.twikoo.envId) return;
+            const urls = items.map(item => '/echo/' + item.id);
+
+            const fetchCounts = () => {
+                twikoo.getCommentsCount({
+                    envId: ctx.twikoo.envId,
+                    region: ctx.twikoo.region,
+                    urls: urls,
+                    includeReply: true
+                }).then(res => {
+                    res.forEach(item => {
+                        const el = container.querySelector(`.item.comments[data-path="${item.url}"] .count`);
+                        if (el && item.count > 0) {
+                            el.innerText = item.count;
+                        }
+                    });
+                }).catch(err => {
+                    console.error('[Ech0] Twikoo error:', err);
+                });
+            };
+
+            if (typeof twikoo !== 'undefined' && twikoo.getCommentsCount) {
+                fetchCounts();
+            } else {
+                utils.js(ctx.twikoo.js, { defer: true }).then(() => {
+                    const checkTwikoo = setInterval(() => {
+                        if (typeof twikoo !== 'undefined' && twikoo.getCommentsCount) {
+                            clearInterval(checkTwikoo);
+                            fetchCounts();
+                        }
+                    }, 500);
+                });
+            }
+        };
     });
 });
