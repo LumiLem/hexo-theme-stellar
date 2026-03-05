@@ -22,11 +22,15 @@ utils.jq(() => {
             const hide_filter = el.getAttribute('hide')?.split(',') || [];
             const loadmore_enabled = el.getAttribute('loadmore') !== 'false';
             const forced_layout = el.getAttribute('layout');
+            const image_process_enabled = el.getAttribute('image-process') === 'true'; // 默认 false
+            let imageProcessParams = null;
+            let isSettingsFetched = false;
             let currentPage = 1;
 
             const loadEchos = (page) => {
                 utils.onLoading(el);
-                fetch(`${api}/echo/page`, {
+
+                const fetchEchos = fetch(`${api}/echo/page`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -35,13 +39,28 @@ utils.jq(() => {
                         search: '',
                         user: user_filter
                     })
-                })
-                    .then(res => {
-                        if (!res.ok) throw new Error('Network response was not ok');
-                        return res.json();
-                    })
-                    .then(resp => {
+                }).then(res => {
+                    if (!res.ok) throw new Error('Network response was not ok');
+                    return res.json();
+                });
+
+                // 如果还没获取过设置，且允许使用图片处理配置，则与发帖内容并行获取
+                const fetchSettings = isSettingsFetched || !image_process_enabled
+                    ? Promise.resolve(null)
+                    : fetch(`${api}/image-process/settings`, { method: 'GET' })
+                        .then(res => res.ok ? res.json() : null)
+                        .catch(() => null);
+
+                Promise.all([fetchEchos, fetchSettings])
+                    .then(([resp, settingResp]) => {
                         utils.onLoadSuccess(el);
+
+                        // 读取后台返回的图片处理规则
+                        if (settingResp && settingResp.code === 1 && settingResp.data) {
+                            imageProcessParams = settingResp.data;
+                            isSettingsFetched = true;
+                        }
+
                         if (resp.code === 1) {
                             renderEchos(el, resp.data.items, api);
                             if (loadmore_enabled && resp.data.items && resp.data.items.length === limit) {
@@ -67,18 +86,17 @@ utils.jq(() => {
                 return text;
             };
 
+            const getURL = (url, baseApi) => {
+                if (!url) return '';
+                if (url.startsWith('http') || url.startsWith('//') || url.startsWith('data:')) {
+                    return url;
+                }
+                return baseApi + (url.startsWith('/') ? '' : '/') + url;
+            };
+
             const renderEchos = (container, items, baseApi) => {
                 if (!items) return;
                 const siteUrl = baseApi.replace(/\/api$/, '');
-
-                const getURL = (url) => {
-                    if (!url) return '';
-                    if (url.startsWith('http') || url.startsWith('//') || url.startsWith('data:')) {
-                        return url;
-                    }
-                    // 使用 baseApi 作为相对路径的基准，确保包含 /api 前缀
-                    return baseApi + (url.startsWith('/') ? '' : '/') + url;
-                };
 
                 items.forEach(item => {
                     const node = document.createElement('div');
@@ -88,11 +106,11 @@ utils.jq(() => {
                     const postLayout = forced_layout || item.layout || 'grid';
                     const isTextTop = postLayout === 'grid' || postLayout === 'horizontal';
 
-                    let contentHtml = `<div class="content md-text">${markedParse(item.content || '')}</div>`;
+                    let contentHtml = item.content ? `<div class="content md-text">${markedParse(item.content)}</div>` : '';
                     let galleryHtml = item.media && item.media.length > 0 ? renderGallery(item, item.media, postLayout, baseApi) : '';
                     let extensionHtml = item.extension ? renderExtension(item.extension, item.extension_type, baseApi) : '';
 
-                    const avatarUrl = item.user?.avatar ? getURL(item.user.avatar) : default_avatar;
+                    const avatarUrl = item.user?.avatar ? getURL(item.user.avatar, baseApi) : default_avatar;
 
                     let html = `
                     <div class="header">
@@ -157,21 +175,56 @@ utils.jq(() => {
                 const isCarousel = l === 'carousel';
                 let html = `<div class="gallery layout-${l}" data-count="${visibleMedia.length}">`;
 
+                const buildProcessedImageUrl = (originalUrl, source, param) => {
+                    if (!originalUrl || !param || source === 'url') return originalUrl;
+                    param = String(param).trim();
+                    const hasQuery = originalUrl.includes('?');
+                    if (param.startsWith('?') || param.startsWith('&')) {
+                        const separator = hasQuery ? '&' : '?';
+                        return `${originalUrl}${separator}${param.slice(1)}`;
+                    }
+                    return `${originalUrl}${hasQuery ? '&' : '?'}${param}`;
+                };
+
                 visibleMedia.forEach((m, idx) => {
                     const isLive = m.media_type === 'image' && m.live_video_id;
                     const liveVideo = isLive ? media.find(v => v.id === m.live_video_id) : null;
                     // 轮播图模式：第一张默认显示
                     const activeClass = isCarousel ? (idx === 0 ? ' active' : '') : '';
 
+                    const mediaUrlBase = getURL(m.media_url, baseApi);
+                    let thumbUrl = mediaUrlBase;
+                    let fullUrl = mediaUrlBase;
+
+                    if (m.media_source && imageProcessParams) {
+                        const { local_process, local_thumb_param, local_full_param, s3_process, s3_thumb_param, s3_full_param } = imageProcessParams;
+                        let thumbParam = null;
+                        let fullParam = null;
+
+                        if (m.media_source === 'local' && local_process) {
+                            thumbParam = local_thumb_param;
+                            fullParam = local_full_param;
+                        } else if (m.media_source === 's3' && s3_process) {
+                            thumbParam = s3_thumb_param;
+                            fullParam = s3_full_param;
+                        }
+
+                        if (thumbParam) thumbUrl = buildProcessedImageUrl(mediaUrlBase, m.media_source, thumbParam);
+                        if (fullParam) fullUrl = buildProcessedImageUrl(mediaUrlBase, m.media_source, fullParam);
+                    }
+
+                    const liveVideoUrl = liveVideo ? getURL(liveVideo.media_url, baseApi) : '';
+
                     if (isLive && liveVideo) {
                         html += `
                         <div class="livephoto-container${activeClass}" 
                              data-fancybox="ech0-${i}-${echo.id}" 
                              data-caption="${caption}"
-                             data-livephoto-image="${m.media_url}" 
-                             data-livephoto-video="${liveVideo.media_url}">
-                            <img class="livephoto-image" src="${m.media_url}" loading="lazy">
-                            <video class="livephoto-video" src="${liveVideo.media_url}" preload="metadata" muted playsinline disablepictureinpicture></video>
+                             data-src="${fullUrl}"
+                             data-livephoto-image="${fullUrl}" 
+                             data-livephoto-video="${liveVideoUrl}">
+                            <img class="livephoto-image" src="${thumbUrl}" loading="lazy">
+                            <video class="livephoto-video" src="${liveVideoUrl}" preload="metadata" muted playsinline disablepictureinpicture></video>
                             <div class="livephoto-overlay" title="点击查看实况照片">
                                 <svg class="livephoto-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                     <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/>
@@ -185,7 +238,7 @@ utils.jq(() => {
                     } else if (m.media_type === 'video') {
                         html += `
                         <div class="video-container${activeClass}">
-                            <video src="${m.media_url}#t=0.1" 
+                            <video src="${mediaUrlBase}#t=0.1" 
                                    preload="metadata" 
                                    muted
                                    data-fancybox="ech0-${i}-${echo.id}" 
@@ -199,7 +252,8 @@ utils.jq(() => {
                     } else {
                         html += `
                         <div class="image-container${activeClass}">
-                            <img src="${m.media_url}" 
+                            <img src="${thumbUrl}" 
+                                 data-original="${fullUrl}"
                                  loading="lazy"
                                  data-fancybox="ech0-${i}-${echo.id}" 
                                  data-caption="${caption}">
@@ -319,20 +373,20 @@ utils.jq(() => {
                     if (music) {
                         if (music.server === 'apple') {
                             return `
-                            <div class="shadow-sm rounded-xl overflow-hidden" style="margin:0.5rem 1rem;">
+                            <div class="tag-plugin audio shadow-sm rounded-xl overflow-hidden">
                                 <iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="175" style="width: 100%; overflow: hidden; border-radius: 10px" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/${music.type}/${music.id}"></iframe>
                             </div>
                         `;
                         } else {
                             return `
-                            <div class="tag-plugin audio shadow" style="margin:0.5rem 1rem;">
-                                <meting-js server="${music.server}" type="${music.type}" id="${music.id}" volume="0.7" lrc-type="0"></meting-js>
+                            <div class="tag-plugin audio shadow">
+                                <meting-js server="${music.server}" type="${music.type}" id="${music.id}"></meting-js>
                             </div>
                         `;
                         }
                     }
                     return `
-                    <div class="tag-plugin audio shadow" style="margin:0.5rem 1rem;">
+                    <div class="tag-plugin audio shadow">
                         <audio controls src="${ext}" style="width:100%"></audio>
                     </div>
                 `;

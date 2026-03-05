@@ -327,10 +327,10 @@
               };
             }
           } else {
-            const mediaSrc = el.src || el.dataset.src || el.href;
+            const mediaSrc = el.dataset.original || el.dataset.src || el.src || el.href;
             item = {
               src: mediaSrc,
-              thumb: el.dataset.thumb || mediaSrc,
+              thumb: el.src || el.dataset.src || el.dataset.thumb || mediaSrc,
               caption: el.dataset.caption,
             };
             // 只有在明确指定了非默认类型时才设置 type，或者为视频文件指定 html5video

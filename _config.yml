@@ -409,6 +409,7 @@ tag_plugins:
   # {% image %}
   image:
     fancybox: false # true, false
+    parse_markdown: false # true, false
     # 实况照片功能说明：
     # 使用 livephoto 参数可以创建实况照片效果
     # 语法：{% image 图片URL 描述 fancybox:true livephoto:视频URL %}
@@ -592,6 +593,17 @@ plugins:
       introduce: '我是文章辅助AI: QX-AI，点击下方的按钮，让我生成本文简介、推荐相关文章等。'
       version: TianliGPT
       button: ["介绍自己", "推荐文章", "生成摘要", "矩阵穿梭"]
+
+
+  # APlayer & MetingJS (Support for Ech0 Music)
+  aplayer_meting:
+    enable: false
+    # 外部依赖资源 (按需加载时使用)
+    aplayer_css: https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css
+    aplayer_js: https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js
+    meting_js: https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js
+    # 自定义 Meting API 地址
+    # api: https://meting.qjqq.cn
 
 
   # Katex - The fastest math typesetting library for the web

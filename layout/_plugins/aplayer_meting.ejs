@@ -1,0 +1,36 @@
+<script>
+    (function () {
+        const load = () => {
+            if (window.meting_loader) return;
+
+            const selector = 'meting-js, .tag-plugin.audio, .ds-ech0';
+            if (document.querySelectorAll(selector).length === 0) return;
+
+            window.meting_loader = true;
+            let api = '<%- conf.api || "" %>';
+            if (api) {
+                if (api.indexOf('?') === -1) {
+                    api += '?server=:server&type=:type&id=:id&auth=:auth&r=:r';
+                }
+                window.meting_api = api;
+            }
+
+            utils.css('<%- conf.aplayer_css %>');
+            utils.js('<%- conf.aplayer_js %>', { defer: true }).then(() => {
+                utils.js('<%- conf.meting_js %>', { defer: true });
+            });
+        };
+
+        load();
+
+        const observer = new MutationObserver(() => {
+            load();
+            if (window.meting_loader) {
+                observer.disconnect();
+            }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        setTimeout(() => observer.disconnect(), 5000);
+    })();
+</script>

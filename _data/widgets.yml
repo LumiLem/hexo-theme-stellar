@@ -82,6 +82,7 @@ ech0:
   type: ech0
   title: 我的动态
   api: https://moments.lumlime.cn/api
+  image-process: true
   limit: 5
   hide: user
 
