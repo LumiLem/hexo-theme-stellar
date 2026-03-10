@@ -312,10 +312,11 @@
             const imageUrl = el.dataset.livephotoImage;
             const videoUrl = el.dataset.livephotoVideo;
             if (imageUrl && videoUrl) {
+              const img = el.querySelector('img');
               item = {
                 html: createLivePhotoHTML(imageUrl, videoUrl),
                 class: 'has-livephoto',
-                thumb: imageUrl,
+                thumb: img?.dataset?.src || img?.src || imageUrl,
                 caption: el.dataset.caption,
               };
             } else {

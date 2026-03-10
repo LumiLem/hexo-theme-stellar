@@ -1,0 +1,62 @@
+<%
+const imgConfig = theme.image_process;
+if (imgConfig && imgConfig.enable && Array.isArray(imgConfig.rules) && imgConfig.rules.length > 0) {
+%>
+<script>
+  // Image Process: 根据当前访问域名，为相对路径图片动态拼接 CDN 处理参数
+  (function() {
+    var rules = <%- JSON.stringify(imgConfig.rules) %>;
+    var host = location.hostname;
+    var matched = null;
+    for (var i = 0; i < rules.length; i++) {
+      if (rules[i].domains && rules[i].domains.indexOf(host) !== -1) {
+        matched = rules[i];
+        break;
+      }
+    }
+    if (!matched) return;
+
+    function addParam(url, param) {
+      if (!param || !param.trim()) return url;
+      if (url.indexOf(param.replace(/^[?&]/, '')) !== -1) return url;
+      if (/\.(mp4|webm|svg|gif|swf)($|\?)/i.test(url)) return url;
+      param = param.trim();
+      var sep = url.indexOf('?') !== -1 ? '&' : '?';
+      var p = (param.charAt(0) === '?' || param.charAt(0) === '&') ? param.slice(1) : param;
+      return url + sep + p;
+    }
+
+    // 立即同步执行，在 LazyLoad 初始化之前完成
+    var imgs = document.querySelectorAll('img[data-img-process]');
+    for (var i = 0; i < imgs.length; i++) {
+      var img = imgs[i];
+      var dataSrc = img.getAttribute('data-src');
+      if (dataSrc) {
+        img.setAttribute('data-src', addParam(dataSrc, matched.thumb_param));
+      }
+      var src = img.getAttribute('src');
+      if (src && src.indexOf('data:') !== 0 && src.indexOf('://') === -1 && src.indexOf('//') !== 0) {
+        img.setAttribute('src', addParam(src, matched.thumb_param));
+      }
+      var original = img.getAttribute('data-original');
+      if (original) {
+        img.setAttribute('data-original', addParam(original, matched.full_param));
+      } else if (dataSrc) {
+        img.setAttribute('data-original', addParam(dataSrc, matched.full_param));
+      }
+      img.removeAttribute('data-img-process');
+    }
+
+    // 处理实况照片容器
+    var divs = document.querySelectorAll('[data-livephoto-image]');
+    for (var j = 0; j < divs.length; j++) {
+      var div = divs[j];
+      var liveImg = div.getAttribute('data-livephoto-image');
+      if (liveImg && liveImg.indexOf('://') === -1 && liveImg.indexOf('//') !== 0) {
+        div.setAttribute('data-livephoto-image', addParam(liveImg, matched.full_param));
+        div.setAttribute('data-src', addParam(liveImg, matched.full_param));
+      }
+    }
+  })();
+</script>
+<% } %>

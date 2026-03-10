@@ -2,6 +2,7 @@
 
 hexo.extend.filter.register('after_render:html', require('./lib/img_lazyload').processSite);
 hexo.extend.filter.register('after_render:html', require('./lib/img_onerror').processSite);
+hexo.extend.filter.register('after_render:html', require('./lib/image_process').processSite);
 
 function getAttr(attributes, name) {
     // 支持单双引号、无引号、属性名和值之间有空格，且无引号时不包含/
@@ -37,7 +38,7 @@ function change_image(data) {
                 if (matches_html_img) {
                     s = s.replace(
                         /<img\s+([^>]+)\s*\/?>/g,
-                        function(match, attributes) {
+                        function (match, attributes) {
                             // 提取所有属性，支持单双引号、无引号
                             const src = getAttr(attributes, 'src');
                             const alt = getAttr(attributes, 'alt');
